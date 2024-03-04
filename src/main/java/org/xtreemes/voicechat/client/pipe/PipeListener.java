@@ -1,10 +1,9 @@
-package org.xtreemes.voicechat.client;
+package org.xtreemes.voicechat.client.pipe;
 
 import com.jagrosh.discordipc.IPCClient;
 import com.jagrosh.discordipc.IPCListener;
 import com.jagrosh.discordipc.entities.Packet;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.input.Input;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -13,7 +12,10 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.xtreemes.voicechat.client.StartClientTick;
+import org.xtreemes.voicechat.client.VoiceChatManager;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -30,11 +32,9 @@ public class PipeListener implements IPCListener {
     @Override
     public void onPacketReceived(IPCClient client, Packet packet){
         JSONObject json = packet.getJson();
-        System.out.println("Packet received!");
 
         if(json.has("cmd")){
             String cmd = json.getString("cmd");
-            System.out.println("CMD is: " + cmd);
             switch (cmd) {
                 case "AUTHORIZE" -> {
                     JSONObject data = json.getJSONObject("data");
@@ -82,27 +82,54 @@ public class PipeListener implements IPCListener {
                     JSONObject subscribe = new JSONObject()
                             .put("cmd", "SUBSCRIBE")
                             .put("evt", "VOICE_CHANNEL_SELECT");
-                    ClientTickEvents.START_CLIENT_TICK.register(clientt -> {
-                        System.out.println("test");
-                    });
+                    ClientTickEvents.START_CLIENT_TICK.register(new StartClientTick());
                     PipeManager.sendThroughPipe(subscribe);
                 }
                 case "DISPATCH" -> {
                     String event = json.getString("evt");
                     if (event.equals("VOICE_CHANNEL_SELECT")) {
-                        System.out.println("Voice channel updated! New Channel: ");
+                        System.out.println("Voice channel updated!");
                         Object channel_id = json.getJSONObject("data").get("channel_id");
                         if(channel_id instanceof String) {
                             VoiceChatManager.setActiveVC(channel_id.toString());
 
-                            /* JSONObject get_channel = new JSONObject()
+                             JSONObject get_channel = new JSONObject()
                                     .put("cmd", "GET_CHANNEL")
                                     .put("args", new JSONObject()
                                             .put("channel_id", channel_id)
-                                    ); */
+                                    );
+                             PipeManager.sendThroughPipe(get_channel);
                         } else {
                             VoiceChatManager.setActiveVC(null);
+                            VoiceChatManager.setVoiceChatState(false);
                         }
+                    }
+                }
+                case "GET_CHANNEL" -> {
+                    JSONObject data = json.getJSONObject("data");
+                    if(data.has("name")) {
+                        String name = data.getString("name");
+                        boolean current = VoiceChatManager.getVoiceChatState();
+                        boolean state = name.equals("Voice Chat");
+                        if (state) {
+                            JSONArray states = data.getJSONArray("voice_states");
+                            for(int i = 0; i < states.length(); i++){
+                                JSONObject json_object = states.getJSONObject(i);
+                                String nick = json_object.getString("nick");
+                                if(VoiceChatManager.getUser(nick) == -100){
+                                    VoiceChatManager.setUser(nick, "0");
+                                    VoiceChatManager.setUserID(nick,json_object.getJSONObject("user").getString("id"));
+                                }
+                            }
+                        }
+                        if (state && !current) {
+                            JSONArray states = data.getJSONArray("voice_states");
+                            VoiceChatManager.setDefaultVolumes(states);
+                        }
+                        VoiceChatManager.setVoiceChatState(state);
+                    } else {
+                        System.out.println("Disconnected 2");
+                        VoiceChatManager.setVoiceChatState(false);
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package org.xtreemes.voicechat.client;
+package org.xtreemes.voicechat.client.pipe;
 
 import com.jagrosh.discordipc.IPCClient;
 import com.jagrosh.discordipc.IPCListener;
@@ -13,7 +13,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 public class PipeManager {
     private static final HashMap<String, Callback> callbacks = new HashMap<>();

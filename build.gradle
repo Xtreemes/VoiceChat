@@ -26,7 +26,7 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    implementation "com.jagrosh:DiscordIPC:latest.release"
+    shadow(implementation("com.jagrosh:DiscordIPC:latest.release"))
 }
 
 processResources {
@@ -70,6 +70,17 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
     }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveClassifier.set("dev")
+    //relocate "com.jagrosh", "com.jagrosh"
+}
+
+remapJar {
+    dependsOn(shadowJar)
+    inputFile = tasks.shadowJar.archiveFile
 }
 
 // configure the maven publication
