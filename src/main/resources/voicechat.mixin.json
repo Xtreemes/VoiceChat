@@ -1,0 +1,6 @@
+{
+  "package": "org.xtreemes.voicechat.client.mixin",
+  "client": [
+    "OverlayMessageMixin"
+  ]
+}
