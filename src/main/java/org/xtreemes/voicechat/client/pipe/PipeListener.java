@@ -88,7 +88,6 @@ public class PipeListener implements IPCListener {
                 case "DISPATCH" -> {
                     String event = json.getString("evt");
                     if (event.equals("VOICE_CHANNEL_SELECT")) {
-                        System.out.println("Voice channel updated!");
                         Object channel_id = json.getJSONObject("data").get("channel_id");
                         if(channel_id instanceof String) {
                             VoiceChatManager.setActiveVC(channel_id.toString());
@@ -118,7 +117,9 @@ public class PipeListener implements IPCListener {
                                 String nick = json_object.getString("nick");
                                 if(VoiceChatManager.getUser(nick) == -100){
                                     VoiceChatManager.setUser(nick, "0");
-                                    VoiceChatManager.setUserID(nick,json_object.getJSONObject("user").getString("id"));
+                                    VoiceChatManager.setDefaultVolume(nick, json_object.getInt("volume"));
+                                    String user_id = json_object.getJSONObject("user").getString("id");
+                                    VoiceChatManager.setUserID(nick, user_id);
                                 }
                             }
                         }
@@ -128,7 +129,6 @@ public class PipeListener implements IPCListener {
                         }
                         VoiceChatManager.setVoiceChatState(state);
                     } else {
-                        System.out.println("Disconnected 2");
                         VoiceChatManager.setVoiceChatState(false);
                     }
                 }

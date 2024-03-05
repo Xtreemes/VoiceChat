@@ -3,6 +3,7 @@ package org.xtreemes.voicechat.client.pipe;
 import com.jagrosh.discordipc.IPCClient;
 import com.jagrosh.discordipc.IPCListener;
 import com.jagrosh.discordipc.entities.Callback;
+import com.jagrosh.discordipc.entities.DiscordBuild;
 import com.jagrosh.discordipc.entities.Packet;
 import com.jagrosh.discordipc.entities.User;
 import com.jagrosh.discordipc.entities.pipe.Pipe;
@@ -52,7 +53,6 @@ public class PipeManager {
             read_thread.start();
 
 
-            System.out.println(pipe.getStatus());
             //startReading();
 
             JSONObject authorize = new JSONObject()
@@ -80,15 +80,12 @@ public class PipeManager {
             try
             {
                 Packet p;
-                System.out.println(pipe.getStatus());
                 Packet.OpCode test = pipe.read().getOp();
 
                 while((p = pipe.read()).getOp() != Packet.OpCode.CLOSE) {
-                    System.out.println("Reading...");
                     JSONObject json = p.getJson();
                     String search_for = json.optString("evt", null);
                     if (search_for != null) {
-                        System.out.println(search_for);
 
                         IPCClient.Event event = IPCClient.Event.valueOf(search_for);
                         String nonce = json.optString("nonce", null);

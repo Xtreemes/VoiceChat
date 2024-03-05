@@ -15,17 +15,20 @@ public class OverlayMessageMixin {
 
     @Inject(method = "onOverlayMessage", at = @At("HEAD"), cancellable = true)
     private void onOverlayMessage(OverlayMessageS2CPacket packet, CallbackInfo ci){
+
         String message = packet.getMessage().getString();
         if(message.startsWith("VOICE_CHAT:") && !message.equals("VOICE_CHAT:")){
-            String data = message.substring(11);
+            if(VoiceChatManager.getVoiceChatState()) {
+                String data = message.substring(11);
 
-            String[] split_data = data.split(",");
-            for(String s : split_data){
-                String[] sub_data = s.split(":");
-                if(sub_data.length == 2) {
-                    VoiceChatManager.setUser(sub_data[0], sub_data[1]);
-                } else {
-                    System.out.println("Incorrect <name>:<volume> packet!");
+                String[] split_data = data.split(",");
+                for (String s : split_data) {
+                    String[] sub_data = s.split(":");
+                    if (sub_data.length == 2) {
+                        VoiceChatManager.setUser(sub_data[0], sub_data[1]);
+                    } else {
+                        System.out.println("Incorrect <name>:<volume> packet!");
+                    }
                 }
             }
 
